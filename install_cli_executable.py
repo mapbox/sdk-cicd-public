@@ -5,6 +5,17 @@ import argparse
 import urllib.request
 from urllib.error import HTTPError
 from tempfile import gettempdir
+import ssl
+
+try:
+    import certifi
+
+    ssl_context = ssl.create_default_context(cafile=certifi.where())
+    handler = urllib.request.HTTPSHandler(context=ssl_context)
+    opener = urllib.request.build_opener(handler)
+    urllib.request.install_opener(opener)
+except ImportError:
+    pass
 
 
 def download_asset(asset_url, token, save_path):
