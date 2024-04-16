@@ -86,16 +86,13 @@ def main(args):
     asset_name = args.asset_name
     output_dir = args.output_dir
 
-    matching_release = (
-        get_latest_release(owner, repo, token)
-        if version == "develop"
-        else get_release_by_tag(owner, repo, version, token)
-    )
     if version == "develop":
         matching_release = get_latest_release(owner, repo, token)
     else:
         try:
             matching_release = get_release_by_tag(owner, repo, version, token)
+            if not matching_release:
+                raise
         except Exception:
             matching_release = get_release_by_tag(
                 owner, repo, f"untagged-{version[:7]}", token
