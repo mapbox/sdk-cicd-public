@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 import json
 import os
 import tarfile
@@ -68,6 +69,26 @@ def get_latest_release(owner, repo, token):
         raise
 
 
+def get_commit_hashes(owner, repo, branch, token):
+    """Returns list of latest commit hashes for branch"""
+    query_string = urllib.parse.urlencode({"sha": branch})
+    api_url = f"https://api.github.com/repos/{owner}/{repo}/commits?{query_string}"
+
+    # Prepare the request
+    request = urllib.request.Request(api_url)
+    request.add_header("Authorization", f"token {token}")
+    request.add_header("Accept", "application/vnd.github.v3+json")
+
+    try:
+        with urllib.request.urlopen(request) as response:
+            data = response.read()
+            commits = json.loads(data)
+            commit_hashes = [commit["sha"] for commit in commits]
+            return commit_hashes
+    except HTTPError:
+        raise
+
+
 def untar_strip_components(tar, strip: int):
     """Helper to strip components from paths in tar files."""
     for member in tar.getmembers():
@@ -87,16 +108,33 @@ def main(args):
     output_dir = args.output_dir
 
     if version == "develop":
+        print("Searching latest release...")
         matching_release = get_latest_release(owner, repo, token)
     else:
         try:
+            print(f"Searching tag {version}...")
             matching_release = get_release_by_tag(owner, repo, version, token)
             if not matching_release:
                 raise
         except Exception:
-            matching_release = get_release_by_tag(
-                owner, repo, f"untagged-{version[:7]}", token
-            )
+            try:
+                untagged_version = f"untagged-{version[:7]}"
+                print(f"Searching untagged_version {untagged_version}...")
+                matching_release = get_release_by_tag(
+                    owner, repo, untagged_version, token
+                )
+                if not matching_release:
+                    raise
+            except Exception:
+                print(f"Searching release from branch {version}...")
+                for sha in get_commit_hashes(owner, repo, version, token):
+                    untagged_version = f"untagged-{sha[:7]}"
+                    matching_release = get_release_by_tag(
+                        owner, repo, untagged_version, token
+                    )
+                    if matching_release:
+                        print(f"Found untagged_version {untagged_version}")
+                        break
 
     if not matching_release:
         print(f"No release found for version {version}")
