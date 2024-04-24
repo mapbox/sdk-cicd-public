@@ -163,8 +163,8 @@ def main(args):
     if os.getenv("CIRCLECI"):
         appended_path = f"export PATH={output_dir}:$PATH"
         print(f"Populated BASH_ENV with {appended_path}")
-        with open(os.getenv("BASH_ENV"), "w") as f:
-            f.write(appended_path + "\n")
+        with open(os.getenv("BASH_ENV"), "a") as f:
+            f.write(appended_path)
 
 
 if __name__ == "__main__":
