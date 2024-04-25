@@ -161,7 +161,7 @@ def main(args):
 
     os.remove(asset_path)
     if os.getenv("CIRCLECI"):
-        appended_path = f"export PATH={output_dir}:$PATH"
+        appended_path = f"export PATH=\"{output_dir}:$PATH\""
         print(f"Populated BASH_ENV with {appended_path}")
         with open(os.getenv("BASH_ENV"), "a") as f:
             f.write(appended_path)
