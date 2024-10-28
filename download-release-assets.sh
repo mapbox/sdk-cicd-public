@@ -47,10 +47,6 @@ download_asset() {
     fi
 }
 
-# Create a directory named after the tag (optional, uncomment if needed)
-# mkdir -p "$TAG"
-# cd "$TAG"
-
 # Initialize counters
 total=0
 successful=0
