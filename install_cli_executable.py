@@ -19,21 +19,43 @@ except ImportError:
     pass
 
 
+class NoRedirectsHandler(urllib.request.HTTPRedirectHandler):
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        # Prevent urllib from automatically following the redirect
+        raise HTTPError(newurl, code, msg, headers, fp)
+
+
 def download_asset(asset_url, token, save_path):
-    """Download a release asset from GitHub."""
+    """
+    Download a release asset from GitHub. Will follow Azure redirects
+    and strip Authorization header if needed.
+    https://github.com/orgs/community/discussions/88698
+    """
     request = urllib.request.Request(asset_url)
     request.add_header("Authorization", f"token {token}")
     request.add_header("Accept", "application/octet-stream")
     request.add_header("X-GitHub-Api-Version", "2022-11-28")
 
+    opener = urllib.request.build_opener(NoRedirectsHandler())
+
     try:
-        with urllib.request.urlopen(request) as response:
-            with open(save_path, "wb") as f:
-                f.write(response.read())
-        print(f"Asset downloaded successfully and saved to {save_path}")
+        response = opener.open(request)
+        with open(save_path, "wb") as f:
+            f.write(response.read())
+        print(f"Asset downloaded successfully to {save_path}")
+        return
     except HTTPError as e:
-        print(f"Error downloading asset: HTTP {e.code} - {e.reason}")
-        raise
+        if e.code == 302:
+            redirect_url = e.headers.get("Location")
+            print("Redirected...")
+            download_request = urllib.request.Request(redirect_url)
+            with urllib.request.urlopen(download_request) as redirect_response:
+                with open(save_path, "wb") as f:
+                    f.write(redirect_response.read())
+            print(f"Asset downloaded after redirect to {save_path}")
+        else:
+            print(f"Error downloading asset: HTTP {e.code} - {e.reason}")
+            raise
 
 
 def get_release_by_tag(owner, repo, tag, token):
