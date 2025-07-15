@@ -24,6 +24,7 @@ def download_asset(asset_url, token, save_path):
     request = urllib.request.Request(asset_url)
     request.add_header("Authorization", f"token {token}")
     request.add_header("Accept", "application/octet-stream")
+    request.add_header("X-GitHub-Api-Version", "2022-11-28")
 
     try:
         with urllib.request.urlopen(request) as response:
@@ -41,6 +42,7 @@ def get_release_by_tag(owner, repo, tag, token):
     request = urllib.request.Request(url)
     request.add_header("Authorization", f"token {token}")
     request.add_header("Accept", "application/vnd.github.v3+json")
+    request.add_header("X-GitHub-Api-Version", "2022-11-28")
 
     try:
         with urllib.request.urlopen(request) as response:
@@ -59,6 +61,7 @@ def get_latest_release(owner, repo, token):
     request = urllib.request.Request(url)
     request.add_header("Authorization", f"token {token}")
     request.add_header("Accept", "application/vnd.github.v3+json")
+    request.add_header("X-GitHub-Api-Version", "2022-11-28")
 
     try:
         with urllib.request.urlopen(request) as response:
@@ -78,6 +81,7 @@ def get_commit_hashes(owner, repo, branch, token):
     request = urllib.request.Request(api_url)
     request.add_header("Authorization", f"token {token}")
     request.add_header("Accept", "application/vnd.github.v3+json")
+    request.add_header("X-GitHub-Api-Version", "2022-11-28")
 
     try:
         with urllib.request.urlopen(request) as response:
