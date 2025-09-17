@@ -1,6 +1,8 @@
 #!/bin/bash
 
 SDK_CI_INSTALL_STRATEGY="${SDK_CI_INSTALL_STRATEGY:-executable}"
+export DEBIAN_FRONTEND=noninteractive
+export NEEDRESTART_MODE=a
 
 if [[ "$SDK_CI_ALLOW_FAILURE" == "true" ]]; then
     echo "WARNING: Failures allowed. Command will exit with code 0, whatever happens."
@@ -73,7 +75,7 @@ main() {
             # Update the system's package lists.
             sudo apt-get update || true
             # Install python3-venv package.
-            if sudo apt-get install python3-venv -y; then
+            if $install_python3_venv_cmd; then
                 echo "Successfully installed python3-venv. Attempting to create virtual environment again..."
                 # Attempt to create the virtual environment again.
                 if ! $venv_create_cmd; then
